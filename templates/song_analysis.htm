@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <link rel="stylesheet" href="{{url_for('static', filename='css/style.css')}}"/>
+    <link rel="icon" type="image/png" href="{{url_for('static', filename='img/fav.png')}}">
+    <title>Spotify URL Analyzer</title>
+    <script src="https://kit.fontawesome.com/ae218687f7.js" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+    </script>
+</head>
+
+<body>
+
+<div class="wrapper">
+    <br>
+    <br>
+    <div class="container left">
+        <div class="song_info" style="margin-left:40px">
+            <h4 class="analysis-title" style="margin-left: 0px">Canzone analizzata</h4>
+            <img src="{{song_data[1].album_url}}" width="200" height="200">
+            <h3>
+                {{song_data[1].name}}
+            </h3>
+            <h8>
+                {{song_data[1].artist}}
+            </h8>
+        </div>
+        <br>
+        <h4 class="analysis-title">Audio features</h4>
+        <div class="song_features">
+            <ul>
+                <li>Danceability: {{song_data[0].danceability}}</li>
+                <li>Energy: {{song_data[0].energy}}</li>
+                <li>Key: {{song_data[0].key}}</li>
+                <li>Loudness: {{song_data[0].loudness}}</li>
+                <li>Mode: {{song_data[0].mode}}</li>
+                <li>Speechiness: {{song_data[0].speechiness}}</li>
+                <li>Acousticness: {{song_data[0].acousticness}}</li>
+                <li>Instrumentalness: {{song_data[0].instrumentalness}}</li>
+                <li>Liveness: {{song_data[0].liveness}}</li>
+                <li>Valence: {{song_data[0].valence}}</li>
+                <li>Tempo: {{song_data[0].tempo}}</li>
+            </ul>
+        </div>
+        <h4 class="analysis-title">Analisi del genere</h4>
+        <div class="song_features">
+            <ul>
+                {% for genre in song_data[2] %}
+                <li>{{genre[0]}}: {{genre[1]}}%</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <h4 class="analysis-title">Canzoni consigliate</h4>
+        <div class="song_features">
+            <ul>
+                <li>{{song_data[3][0].name}} - {{song_data[3][0].artist}}</li>
+                <li>{{song_data[3][1].name}} - {{song_data[3][1].artist}}</li>
+                <li>{{song_data[3][2].name}} - {{song_data[3][2].artist}}</li>
+            </ul>
+        </div>
+    </div>
+</div>
+</body>
+</html>

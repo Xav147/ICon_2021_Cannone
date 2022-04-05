@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Raleway');
+
+* {
+    font-family: "Raleway";
+    color: #fff;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    background: rgb(18, 18, 18);
+    background: linear-gradient(0deg, rgba(18, 18, 18, 1) 0%, rgba(18, 18, 18, 1) 69%, rgba(35, 35, 35, 1) 100%) no-repeat fixed center;
+}
+
+/* Form section*/
+
+.form-container {
+    margin: 0px auto;
+    height: 100px;
+    width: 420px;
+    text-align: center;
+}
+
+#form-label {
+    font: 700 24px "Raleway", sans-serif;
+    margin-left: 20px;
+}
+
+#search-box {
+    margin-left: -10px;
+    margin-right: 5px;
+    padding: 20px;
+    border-radius: 25px;
+    color: #191414;
+}
+
+#input-container {
+    display: inline;
+    margin-left: 20px;
+    background-color: #fff;
+    padding: 12px;
+    border-radius: 25px;
+}
+
+.input {
+    width: 250px;
+    border: 0px;
+    margin-left: -5px;
+    color: #191414;
+    padding: 10px 0px;
+    margin-top: -20px;
+    margin-bottom: -20px;
+}
+
+.playlist-input:focus, .playlist-input:enabled {
+    border: 0px;
+    background-color: #ffffff;
+    color: #191414;
+}
+
+#sub-button {
+    margin-left: 10px;
+    background-color: #1ed760;
+    border-radius: 50px;
+    border: 0px;
+    width: 47px;
+    height: 47px;
+    font-size: 24px;
+    color: #fff;
+}
+
+/* Playlists container section */
+
+*::-webkit-scrollbar {
+    width: 12px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: rgba(135, 135, 135, 80%);
+}
+
+.playlist-container {
+    height: 600px;
+    width: 800px;
+    overflow: hidden;
+    overflow-y: scroll;
+}
+
+.analysis-title {
+    font: 700 34px "Raleway", sans-serif;
+    color: #fff;
+    margin-left: 30px;
+}
+
+ul {
+    list-style-type: none;
+    width: 500px;
+}
+
+li img {
+    float: left;
+    margin: 0 15px 0 0;
+}
+
+li .song-title {
+    font: 500 20px/1.5 "Raleway", sans-serif;
+    color: #fff;
+}
+
+li .song-artist {
+    font: 300 16px/1.5 "Raleway", sans-serif;
+    color: #b3b3b3;
+}
+
+li {
+    padding: 5px 10px;
+    overflow: auto;
+}
+
+li:hover {
+    background: #2a2a2a;
+}
+
+.wrapper {
+    display: flex;
+}
+
+.left {
+    flex: 1;
+}
+
+.right {
+    flex: 1;
+}

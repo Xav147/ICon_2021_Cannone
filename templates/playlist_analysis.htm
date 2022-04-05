@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <link rel="stylesheet" href="{{url_for('static', filename='css/style.css')}}"/>
+    <link rel="icon" type="image/png" href="{{url_for('static', filename='img/fav.png')}}">
+    <title>Spotify URL Analyzer</title>
+    <script src="https://kit.fontawesome.com/ae218687f7.js" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+    </script>
+</head>
+
+<body>
+
+<div class="wrapper">
+    <div class="playlist_info">
+
+    </div>
+    <br>
+    <br>
+    <div class="container left">
+        <h4 class="analysis-title">Playlist analizzata</h4>
+        <nav class="playlist-container">
+            <ul id="analyzed-playlist">
+                {% for song in playlist %}
+                <li>
+                    <img class="album" src="{{song[2]}}" width="100" height="100">
+                    <span class="song-title">{{song[0]}}</span>
+                    <br>
+                    <span class="song-artist">{{song[1].replace("[","").replace("]","").replace("'","")}}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </nav>
+    </div>
+    <div class="container right">
+        <h4 class="playlist-title">Canzoni consigliate</h4>
+        <nav class="playlist-container">
+            <ul id="recommended_playlist">
+                {% for song in recommended %}
+                <li>
+                    <img class="album" src="{{song[2]}}" width="100" height="100">
+                    <span class="song-title">{{song[0]}}</span>
+                    <br>
+                    <span class="song-artist">{{song[1].replace("[","").replace("]","").replace("'","")}}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </nav>
+    </div>
+</div>
+</body>
+</html>

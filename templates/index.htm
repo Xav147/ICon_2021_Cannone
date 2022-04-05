@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <link rel="stylesheet" href="{{url_for('static', filename='css/style.css')}}"/>
+    <link rel="icon" type="image/png" href="{{url_for('static', filename='img/fav.png')}}">
+    <title>Spotify URL Analyzer</title>
+    <script src="https://kit.fontawesome.com/ae218687f7.js" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+        if ({{error}} === 1) {
+            alert("C'è stato un errore... Controlla che l'URL inserito sia valido.")
+        }
+        if ({{error}} === 2){
+            alert("Non è ancora possibile analizzare album da Spotify.")
+        }
+    </script>
+</head>
+
+<body>
+<div class="form-container">
+    <form action="#" method="POST">
+        <h2 id="form-label">Spotify URL Analyzer</h2>
+        <div id="input-container">
+            <span id="search_box"><i class="fa-solid fa-magnifying-glass" style="color:black;"></i></span>
+            <input type="text" name="url" class="input" placeholder="URL di Spotify da analizzare">
+        </div>
+        <input type="submit" id="sub-button" value="&#9658;">
+    </form>
+</div>
+</body>
+</html>
