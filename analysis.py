@@ -1,22 +1,17 @@
 import pandas as pd
+import numpy as np
+import logging
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import MinMaxScaler
 
 from spoty_api import sp
+
 from data_preparation import tracks, reals
-
-import numpy as np
-from data_preparation import top_20_genres, clustering_df
-from modeling import predict_genre, model, kmeans
-
-# complete_feature_set = create_feature_set(tracks, reals)
-# complete_feature_set.to_csv('feature_set_x10.csv', index=False)
-complete_feature_set = pd.read_csv('feature_set_x10.csv')
-
-
-# complete_feature_set = pd.read_csv('feature_set_x4.csv')
+from classification_dataset import top_genres
+from modeling import predict_genre, classifiers
+from bbn import bayes_predict
 
 
 def ohe_prep(df, column, new_name):
@@ -29,7 +24,7 @@ def ohe_prep(df, column, new_name):
 
 def build_tfidf_set(df, float_cols):
     tfidf = TfidfVectorizer()
-    tfidf_matrix = tfidf.fit_transform(df['consolidates_genre_lists'].apply(lambda x: " ".join(x)))
+    tfidf_matrix = tfidf.fit_transform(df['genre'].apply(lambda x: " ".join(x)))
     genre_df = pd.DataFrame(tfidf_matrix.toarray())
     genre_df.columns = ['genre' + "|" + i for i in tfidf.get_feature_names()]
     genre_df.reset_index(drop=True, inplace=True)
@@ -71,7 +66,7 @@ def create_necessary_outputs(playlist_name, id_dic, df):
 def generate_playlist_feature(complete_feature_set, playlist_df, weight_factor):
     complete_feature_set_playlist = complete_feature_set[
         complete_feature_set['id'].isin(playlist_df['id'].values)]  # .drop('id', axis = 1).mean(axis =0)
-    print(complete_feature_set_playlist.shape)
+    logging.info(complete_feature_set_playlist.shape)
     complete_feature_set_playlist = complete_feature_set_playlist.merge(playlist_df[['id', 'date_added']], on='id',
                                                                         how='inner')
     complete_feature_set_nonplaylist = complete_feature_set[
@@ -119,8 +114,7 @@ def analyze_url(url):
         payload = analyze_playlist(id)
         return type, payload
     except Exception as e:
-        print("URL Exception 1: ")
-        print(e)
+        logging.error(f"URL Exception 1: {e}")
         try:
             sp.track(id)
             type = 2
@@ -175,16 +169,29 @@ def analyze_track(id):
     song_info['album_url'] = track_data['album']['images'][0]['url']
     song_info['name'] = track_data['name']
     song_info['artist'] = track_data['artists'][0]['name']
-    prediction_probabilities, suggestions = predict_genre(features, model)
+    # Conversione chiavi delle canzoni
+    possible_keys = ['C / Do', 'C# / Do diesis', 'D / Re', 'D# / Re diesis', 'E / Mi', 'F / Fa', 'F# / Fa diesis',
+                     'G / Sol',
+                     'G# / Sol diesis', 'A / La', 'A# / La diesis', 'B / Si']
+
+    song_info['key'] = possible_keys[song_info['key']]
+    prediction_probabilities, suggestions = predict_genre(features, classifiers[0])
+    bayes_predict(features)
     probabilities = dict()
     try:
         # Format predictions
-        for genre in top_20_genres:
-            probabilities[genre] = int(prediction_probabilities[0][list(top_20_genres).index(genre)] * 100)
+        for genre in top_genres:
+            probabilities[genre] = int(prediction_probabilities[0][list(top_genres).index(genre)] * 100)
     except Exception as e:
-        print("Analyze Track Exception:")
-        print(e)
+        logging.error(f"Analyze Track Exception: {e}")
 
     probabilities = sorted(probabilities.items(), reverse=True, key=lambda x: x[1])
 
     return features, song_info, probabilities, suggestions
+
+
+# complete_feature_set = build_tfidf_set(tracks, reals)
+# complete_feature_set.to_csv('feature_set_x10.csv', index=False)
+
+# complete_feature_set = pd.read_csv('feature_set_x4.csv')
+complete_feature_set = pd.read_csv('feature_set_x10.csv')

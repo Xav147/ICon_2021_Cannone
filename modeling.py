@@ -2,49 +2,32 @@ import numpy as np
 import pandas as pd
 import os
 import joblib
+import logging
 
 from sklearn import metrics
-from sklearn.cluster import KMeans
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
-from sklearn.neural_network import MLPClassifier
+
 from sklearn.preprocessing import StandardScaler
-from sklearn.feature_selection import SelectKBest, chi2, f_classif
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_score
 
-from data_preparation import tracks, clustering_df, classification_df, top_20_genres
+# from sklearn.feature_selection import SelectKBest, chi2, f_classif
 
+from sklearn.cluster import KMeans
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.naive_bayes import GaussianNB
 
-def print_cm(cm, labels, hide_zeroes=False, hide_diagonal=False, hide_threshold=None):
-    columnwidth = max([len(x) for x in labels] + [5])  # 5 is value length
-    empty_cell = " " * columnwidth
+from data_preparation import tracks, clustering_df
+from classification_dataset import classification_df
 
-    fst_empty_cell = (columnwidth - 3) // 2 * " " + "t/p" + (columnwidth - 3) // 2 * " "
-
-    if len(fst_empty_cell) < len(empty_cell):
-        fst_empty_cell = " " * (len(empty_cell) - len(fst_empty_cell)) + fst_empty_cell
-    print("    " + fst_empty_cell, end=" ")
-
-    for label in labels:
-        print("%{0}s".format(columnwidth) % label, end=" ")
-
-    print()
-    for i, label1 in enumerate(labels):
-        print("    %{0}s".format(columnwidth) % label1, end=" ")
-        for j in range(len(labels)):
-            cell = "%{0}.1f".format(columnwidth) % cm[i, j]
-            if hide_zeroes:
-                cell = cell if float(cm[i, j]) != 0 else empty_cell
-            if hide_diagonal:
-                cell = cell if i != j else empty_cell
-            if hide_threshold:
-                cell = cell if cm[i, j] > hide_threshold else empty_cell
-            print(cell, end=" ")
-        print()
+X = classification_df.drop('genre', axis=1)
+y = classification_df['genre']
 
 
 def kmeans_clustering(df):
-    if (os.path.exists('./clustering/clusters')):
+    if os.path.exists('./clustering/clusters'):
         clusters = joblib.load('./clustering/clusters')
     else:
         clusters = KMeans(n_clusters=1000, random_state=0).fit(df)
@@ -52,11 +35,8 @@ def kmeans_clustering(df):
     return clusters
 
 
-def split_classification_df(df):
-    y = df['consolidates_genre_lists']
-    x = df.drop('consolidates_genre_lists', axis=1)
-
-    x_train, x_test, y_train, y_test = train_test_split(x, y, train_size=0.7, shuffle=True)
+def split_classification_df(X, y):
+    x_train, x_test, y_train, y_test = train_test_split(X, y, train_size=0.7, shuffle=True)
 
     scaler = StandardScaler()
     scaler.fit(x_train)
@@ -65,41 +45,54 @@ def split_classification_df(df):
     return x_train, x_test, y_train, y_test
 
 
-def train_model(model, X_train, X_test, y_train, y_test, filename):
-    model.fit(X_train.values, y_train)
-    joblib.dump(model, filename)
-    score = model.score(X_test, y_test)
-    return model, score
+def train_model(model, x_train, y_train, savepath):
+    model.fit(x_train.values, y_train)
+    joblib.dump(model, savepath)
+    return model
 
 
-def get_stats(name, model):
-    y_pred = model.predict(x_test)
+def get_stats(model):
+    y_pred = model.predict(x_test.values)
+    cvs = cross_val_score(model, X=X, y=y, cv=10)
     stats = {
-        "Name": name,
         "Accuracy": metrics.accuracy_score(y_test, y_pred),
         "Misclassification rate": 1 - metrics.accuracy_score(y_test, y_pred),
         "Precision score": metrics.precision_score(y_test, y_pred, average='weighted'),
-        "Recall score": metrics.recall_score(y_test, y_pred, average='weighted')
+        "Recall score": metrics.recall_score(y_test, y_pred, average='weighted'),
+        "Cross validation scores": cvs
     }
     return stats
 
 
-x_train, x_test, y_train, y_test = split_classification_df(classification_df)
+x_train, x_test, y_train, y_test = split_classification_df(X, y)
 kmeans = kmeans_clustering(clustering_df)
 score = []
 
-models = {
-    'RandomForest': [RandomForestClassifier(), "./classifiers_no_feature_selection/RandomForest"],
-    'LogisticRegression': [LogisticRegression(max_iter=5000), "./classifiers_no_feature_selection/LogisticRegression"],
-    'NeuralNetwork': [MLPClassifier(), "./classifiers_no_feature_selection/NeuralNetwork"]
-}
+savepath = "./classifiers/"
+presets = [
+    # {'model': RandomForestClassifier(), 'savepath': savepath + "RandomForest"},
+    # {'model': LogisticRegression(max_iter=5000), 'savepath': savepath + "LogisticRegression"},
+    # {'model': MLPClassifier(max_iter=5000), 'savepath': savepath + "MLPC-NN"},
+    # {'model': DecisionTreeClassifier(), 'savepath': savepath + "DecisionTree"},
+    # {'model': GradientBoostingClassifier(), 'savepath': savepath + "GradientBoosting"},
+    {'model': GaussianNB(), 'savepath': savepath + "NaiveBayes"},
+]
 
-model = RandomForestClassifier()
-filename = "./classifiers_no_feature_selection/RandomForest"
-if os.path.exists(filename):
-    model = joblib.load(filename)
-else:
-    model, acc = train_model(model, x_train, x_test, y_train, y_test, filename)
+classifiers = []
+stats = {}
+
+for preset in presets:
+    if os.path.exists(preset['savepath']):
+        model = joblib.load(preset['savepath'])
+    else:
+        model = train_model(preset['model'], x_train, y_train, preset['savepath'])
+    classifiers.append(model)
+    model_stats = get_stats(model)
+    stats[model.__class__.__name__] = model_stats
+    print(model_stats)
+
+print(classifiers)
+print(stats)
 
 
 def predict_genre(song_features, model):
@@ -110,12 +103,10 @@ def predict_genre(song_features, model):
         suggestions = []
 
         for i in range(len(clustering_df)):
-            if kmeans.labels_[i] == song_cluster[0]:
-                suggestions.append(tracks.iloc[i])
+            suggestions.append(tracks.iloc[i])
         filter_suggestions = []
         for sugg in suggestions:
             filter_suggestions.append({'name': sugg['name'], 'artist': sugg.artists_upd[0]})
     except Exception as e:
-        print("Predict genre Exception: ")
-        print(e)
+        logging.error(f"Predict genre Exception: {e}")
     return probabilities, filter_suggestions
